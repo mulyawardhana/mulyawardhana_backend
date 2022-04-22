@@ -7,9 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Master\AkunBank;
-use App\Models\Master\PemeriksaKas;
-use App\Models\Master\Jabatan;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -48,28 +45,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function posting()
+    public function setPasswordAttribute($value)
     {
-        return $this->belongsTo(Posting::class);
-    }
-    public function efilling()
-    {
-        return $this->hasMany(Efilling::class);
-    }
-    public function akunBank()
-    {
-        return $this->belongsToMany(akunBank::class, 'users_akuns','user_id','akun_bank_id');
-    }
-    public function akunBanks()
-    {
-        return $this->belongsTo(akunBank::class);
-    }
-    public function pemeriksa()
-    {
-        return $this->belongsTo(PemeriksaKas::class, 'pemeriksa_kas_id');
-    }
-    public function jabatan()
-    {
-        return $this->belongsTo(Jabatan::class, 'jabatan_id');
+        $this->attributes['password'] = bcrypt($value);
     }
 }

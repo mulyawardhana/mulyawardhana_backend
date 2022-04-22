@@ -6,47 +6,34 @@ use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use App\Models\User;
 use Auth;
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
+    public function login(Request $request)
+{
+    //VALIDASI EMAIL DAN PASSWORD YANG DIKIRIMKAN
+    $this->validate($request, [
+        'email' => 'required|email|exists:users,email',
+        'password' => 'required'
+    ]);
 
-    use AuthenticatesUsers;
-    
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    protected $redirectTo = RouteServiceProvider::HOME;
+    //ADA 3 VALUE YANG DIKIRIMKAN, YAKNI: EMAIL, PASSWORD DAN REMEMBER_ME
+    //AMBIL SEMUA REQUEST TERSEBUT KECUALI REMEMBER ME KARENA YANG DIBUTUHKAN
+    //UNTUK OTENTIKASI ADALAH EMAIL DAN PASSWORD
+    $auth = $request->except(['remember_me']);
 
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('guest')->except('logout');
+    //MELAKUKAN PROSES OTENTIKASI
+    if (auth()->attempt($auth, $request->remember_me)) {
+        //APABILA BERHASIL, GENERATE API_TOKEN MENGGUNAKAN STRING RANDOM
+        auth()->user()->update(['api_token' => Str::random(40)]);
+        //KEMUDIAN KIRIM RESPONSENYA KE CLIENT UNTUK DIPROSES LEBIH LANJUT
+        return response()->json(['status' => 'success', 'data' => auth()->user()->api_token], 200);
     }
-    public function username()
-    {
-        return 'username';
-    }
-    public function logout(Request $request)
-    {
-        Auth::logout();
-        return redirect('/login');
-    }
-    
+    //APABILA GAGAL, KIRIM RESPONSE LAGI KE BAHWA PERMINTAAN GAGAL
+    return response()->json(['status' => 'failed']);
+}
+
 }
